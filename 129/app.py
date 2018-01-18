@@ -17,27 +17,73 @@ clock = pygame.time.Clock()
 
 crashed = False
 
+class antimissileClass():
+	def __init__(self, gameDisplay, target):
+		self.width = display_width
+		self.height = display_height
+		self.gameDisplay = gameDisplay
+		self.progress = 0
+		self.startx = self.width/2
+		self.starty = self.height
+		self.endx = target[0]
+		self.endy = target[1]
+		self.boom = False
+
+	def update(self):
+		if(self.startx > self.endx):
+			pygame.draw.aaline(
+				self.gameDisplay, 
+				(0,0,255), 
+				[self.startx,self.starty], 
+				[
+					self.startx + ((self.endx - self.startx) * self.progress),
+					self.starty  - (self.starty - self.endy)* self.progress
+				],
+				1
+			)
+		else:
+			pygame.draw.aaline(
+				self.gameDisplay, 
+				(255, 0, 0), 
+				[self.startx,self.starty], 
+				[
+					self.startx + ((self.endx - self.startx) * self.progress),
+					self.starty  - (self.starty - self.endy)* self.progress
+				],
+				1
+			)
+
+		if (self.progress < 1):
+			self.progress += 0.03
+		else:
+			self.boom = True
+
 class missileClass():
 	def __init__(self, gameDisplay):
 		self.width = display_width
 		self.height = display_height
 		self.gameDisplay = gameDisplay
 		self.progress = 0
-		self.start = random.randint(2,self.width -2)
-		self.end = random.randint(2,self.width -2)
+		self.startx = random.randint(2,self.width -2)
+		self.starty = 0
+		self.endx = random.randint(2,self.width -2)
+		self.endy = self.height
+		self.boom = False
 
 	def update(self):
-		if(self.start > self.end):
-			pygame.draw.aaline(self.gameDisplay, (0,0,255), [self.start,0], [self.start + ((self.end - self.start) * self.progress), display_height * self.progress], 1)
+		if(self.startx > self.endx):
+			pygame.draw.aaline(self.gameDisplay, (0,0,255), [self.startx,self.starty], [self.startx + ((self.endx - self.startx) * self.progress), self.endy * self.progress], 1)
 		else:
-			pygame.draw.aaline(self.gameDisplay, (255,0,0), [self.start,0], [self.end + ((self.start - self.end) * (1 - self.progress)), display_height * self.progress], 1)
+			pygame.draw.aaline(self.gameDisplay, (255,0,0), [self.startx,self.starty], [self.endx + ((self.startx - self.endx) * (1 - self.progress)), self.endy * self.progress], 1)
 
 		if (self.progress < 1):
 			self.progress += 0.01
+		else:
+			self.boom = True
 
-		# Draw the missile
 
 missileQueue = []
+antiMissileQueue = []
 
 while not crashed:
 	for event in pygame.event.get():
@@ -45,14 +91,24 @@ while not crashed:
 			crashed = True
 		if(event.type == pygame.KEYDOWN):
 			missileQueue.append(missileClass(gameDisplay))
-
+		if(event.type == pygame.MOUSEBUTTONDOWN):
+			antiMissileQueue.append(antimissileClass(gameDisplay, event.pos))
 		print(event)
 	
 	gameDisplay.fill(white)
 	# pygame.draw.line(gameDisplay, black, (0,0), (100,100), width=1)
 
-	for missile in missileQueue:
+	for index, missile in enumerate(missileQueue):
+		if(missile.boom == True):
+			missileQueue.pop(index)
 		missile.update()
+
+	pygame.display.update()
+
+	for index, antiMissile in enumerate(antiMissileQueue):
+		if(antiMissile.boom == True):
+			antiMissileQueue.pop(index)
+		antiMissile.update()
 
 	pygame.display.update()
 
