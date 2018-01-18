@@ -81,9 +81,28 @@ class missileClass():
 		else:
 			self.boom = True
 
+class explosionClass():
+	def __init__(self, gameDisplay, pos):
+		self.width = display_width
+		self.height = display_height
+		self.gameDisplay = gameDisplay
+		self.progress = 0
+		self.posx = pos[0]
+		self.posy = pos[1]
+		self.boom = False
+
+	def update(self):
+		pygame.draw.circle(self.gameDisplay, (0,0,255), [self.posx, self.posy], 25, 0)
+		
+		if (self.progress < 1):
+			self.progress += 0.05
+		else:
+			self.boom = True
+
 
 missileQueue = []
 antiMissileQueue = []
+explosionQueue = []
 
 while not crashed:
 	for event in pygame.event.get():
@@ -103,12 +122,17 @@ while not crashed:
 			missileQueue.pop(index)
 		missile.update()
 
-	pygame.display.update()
-
 	for index, antiMissile in enumerate(antiMissileQueue):
 		if(antiMissile.boom == True):
+			explosionQueue.append(explosionClass(gameDisplay,(antiMissile.endx,antiMissile.endy)))
 			antiMissileQueue.pop(index)
 		antiMissile.update()
+
+	for index, explosion in enumerate(explosionQueue):
+		if(explosion.boom == True):
+			explosionQueue.pop(index)
+		explosion.update()
+
 
 	pygame.display.update()
 
