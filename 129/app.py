@@ -1,5 +1,6 @@
 import pygame
 import random
+import math
 
 pygame.init()
 
@@ -17,11 +18,13 @@ clock = pygame.time.Clock()
 
 crashed = False
 
+explosion_radius = 25
+
 class antimissileClass():
 	def __init__(self, gameDisplay, target):
-		self.width = display_width
-		self.height = display_height
 		self.gameDisplay = gameDisplay
+		self.width = self.gameDisplay.get_width()
+		self.height = self.gameDisplay.get_height()
 		self.progress = 0
 		self.startx = self.width/2
 		self.starty = self.height
@@ -54,7 +57,7 @@ class antimissileClass():
 			)
 
 		if (self.progress < 1):
-			self.progress += 0.03
+			self.progress += 0.09
 		else:
 			self.boom = True
 
@@ -69,12 +72,18 @@ class missileClass():
 		self.endx = random.randint(2,self.width -2)
 		self.endy = self.height
 		self.boom = False
+		self.posx = 0
+		self.posy = 0
 
 	def update(self):
 		if(self.startx > self.endx):
 			pygame.draw.aaline(self.gameDisplay, (0,0,255), [self.startx,self.starty], [self.startx + ((self.endx - self.startx) * self.progress), self.endy * self.progress], 1)
+			self.posx = self.startx + ((self.endx - self.startx) * self.progress)
+			self.posy = self.endy * self.progress
 		else:
 			pygame.draw.aaline(self.gameDisplay, (255,0,0), [self.startx,self.starty], [self.endx + ((self.startx - self.endx) * (1 - self.progress)), self.endy * self.progress], 1)
+			self.posx = self.endx + ((self.startx - self.endx) * (1 - self.progress))
+			self.posy = self.endy * self.progress
 
 		if (self.progress < 1):
 			self.progress += 0.01
@@ -92,13 +101,18 @@ class explosionClass():
 		self.boom = False
 
 	def update(self):
-		pygame.draw.circle(self.gameDisplay, (0,0,255), [self.posx, self.posy], 25, 0)
+		pygame.draw.circle(self.gameDisplay, (0,0,255), [self.posx, self.posy], explosion_radius, 0)
 		
 		if (self.progress < 1):
 			self.progress += 0.05
 		else:
 			self.boom = True
 
+def colision(explosionQueue, missileQueue):
+	for missile_index, missile in enumerate(missileQueue):
+		for explosion_index, explosion in enumerate(explosionQueue):
+			if (math.hypot(explosion.posx - missile.posx, explosion.posy - missile.posy ) < explosion_radius):
+				missileQueue.pop(missile_index)
 
 missileQueue = []
 antiMissileQueue = []
@@ -116,6 +130,8 @@ while not crashed:
 	
 	gameDisplay.fill(white)
 	# pygame.draw.line(gameDisplay, black, (0,0), (100,100), width=1)
+
+	colision(explosionQueue, missileQueue)
 
 	for index, missile in enumerate(missileQueue):
 		if(missile.boom == True):
