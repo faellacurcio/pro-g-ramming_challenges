@@ -20,6 +20,10 @@ crashed = False
 
 explosion_radius = 25
 
+LAUNCH_MISSILE = pygame.USEREVENT+1
+pygame.time.set_timer(LAUNCH_MISSILE, 2000)
+
+
 class antimissileClass():
 	def __init__(self, gameDisplay, target):
 		self.gameDisplay = gameDisplay
@@ -57,7 +61,7 @@ class antimissileClass():
 			)
 
 		if (self.progress < 1):
-			self.progress += 0.09
+			self.progress += 0.04
 		else:
 			self.boom = True
 
@@ -86,7 +90,7 @@ class missileClass():
 			self.posy = self.endy * self.progress
 
 		if (self.progress < 1):
-			self.progress += 0.01
+			self.progress += 0.004
 		else:
 			self.boom = True
 
@@ -122,14 +126,15 @@ while not crashed:
 	for event in pygame.event.get():
 		if(event.type == pygame.QUIT):
 			crashed = True
-		if(event.type == pygame.KEYDOWN):
+			print(event)
+		if(event.type == LAUNCH_MISSILE):
 			missileQueue.append(missileClass(gameDisplay))
+			print(event)
 		if(event.type == pygame.MOUSEBUTTONDOWN):
 			antiMissileQueue.append(antimissileClass(gameDisplay, event.pos))
-		print(event)
+			print(event)
 	
 	gameDisplay.fill(white)
-	# pygame.draw.line(gameDisplay, black, (0,0), (100,100), width=1)
 
 	colision(explosionQueue, missileQueue)
 
