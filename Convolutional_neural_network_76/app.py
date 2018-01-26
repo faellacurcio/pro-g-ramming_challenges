@@ -2,6 +2,7 @@
 import numpy
 from keras.datasets import mnist
 from keras.models import Sequential
+from keras.models import model_from_json
 from keras.layers import Dense
 from keras.layers import Dropout
 from keras.layers import Flatten
@@ -40,18 +41,19 @@ y_train = np_utils.to_categorical(y_train)
 y_test = np_utils.to_categorical(y_test)
 num_classes = y_test.shape[1]
 
+
 def baseline_model():
-	# create model
-	model = Sequential()
-	model.add(Conv2D(32, (5, 5), input_shape=(1, 28, 28), activation='relu'))
-	model.add(MaxPooling2D(pool_size=(2, 2)))
-	model.add(Dropout(0.2))
-	model.add(Flatten())
-	model.add(Dense(128, activation='relu'))
-	model.add(Dense(num_classes, activation='softmax'))
-	# Compile model
-	model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-	return model
+    # create model
+    model = Sequential()
+    model.add(Conv2D(32, (5, 5), input_shape=(1, 28, 28), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Dropout(0.2))
+    model.add(Flatten())
+    model.add(Dense(128, activation='relu'))
+    model.add(Dense(num_classes, activation='softmax'))
+    # Compile model
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    return model
 
 
 # build the model
@@ -60,5 +62,26 @@ model = baseline_model()
 model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=10, batch_size=200, verbose=1)
 # Final evaluation of the model
 scores = model.evaluate(X_test, y_test, verbose=1)
-print("CNN Error: %.2f%%" % (100-scores[1]*100))
+print("CNN Error: %.2f%%" % (100-scores[1]))
 
+# serialize model to JSON
+model_json = model.to_json()
+with open("model.json", "w") as json_file:
+    json_file.write(model_json)
+# serialize weights to HDF5
+model.save_weights("model.h5")
+print("Saved model to disk")
+
+# load json and create model
+json_file = open('model.json', 'r')
+loaded_model_json = json_file.read()
+json_file.close()
+loaded_model = model_from_json(loaded_model_json)
+# load weights into new model
+loaded_model.load_weights("model.h5")
+print("Loaded model from disk")
+
+# evaluate loaded model on test data
+loaded_model.compile(loss='binary_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
+score = loaded_model.evaluate(X_test, y_test, verbose=1)
+print("%s: %.2f%%" % (loaded_model.metrics_names[1], score[1]*100))
