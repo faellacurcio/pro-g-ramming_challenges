@@ -176,7 +176,6 @@ while not crashed:
 
     pygame.display.update()
     score += 0.1
-
     clock.tick(30)
 
 pygame.quit()
